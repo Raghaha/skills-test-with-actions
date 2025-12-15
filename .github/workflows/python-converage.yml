@@ -2,13 +2,13 @@ name: Python Coverage
 on:
   push:
     branches:
-      - main:
+      - main
 
 permissions:
     pull-requests: write
 
 jobs:
-  python-converage:
+  python-coverage:
     runs-on: ubuntu-latest
     steps:
         - name: Checkout code
@@ -19,17 +19,17 @@ jobs:
             python-version: '3.13'
         - name: Install dependencies
           run: |
-            pip install requirements.txt
-            pip install pytest
-            pip install coverage=7.9
-            pip install piptest-cov
+            pip install -r requirements.txt
+            pip install pytest==8.4.1
+            pip install coverage==7.9
+            pip install pytest-cov==6.2.1
         - name: Run tests and generate coverage details
           run: pytest --cov=src
         - name: Coverage comment
           uses: py-cov-action/python-coverage-comment@v2
-            with:
-                GITHUB_TOKEN: ${{ github.token }}
-                MINIMUM_GREEN: 90
-                MINIMUM_ORANGE: 70
+          with:
+            GITHUB_TOKEN: ${{ github.token }}
+            MINIMUM_GREEN: 90
+            MINIMUM_ORANGE: 70
         - name: Fail if below threshold
           run: coverage --fail-under=90

@@ -3,3 +3,7 @@ username: test
 password: test@123
 
 AWS_ACCESS_KEY: AKIAI2TETBYWLYFE2UWA
+
+
+username: testtoken
+token: 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

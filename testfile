@@ -1,3 +1,5 @@
 this is a test secret file
 username: test
 password: test@123
+
+AWS_ACCESS_KEY: AKIAI2TETBYWLYFE2UWA

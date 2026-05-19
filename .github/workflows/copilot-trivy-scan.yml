@@ -1,0 +1,57 @@
+name: Copilot Trivy Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      requestId:
+        required: true
+      images:
+        required: true   # comma-separated images
+      mode:
+        required: true   # baseline / candidate
+      callback_url:
+        required: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.45.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.45.0_Linux-64bit.deb
+
+      - name: Run Scan
+        id: scan
+        run: |
+          IFS=',' read -ra IMG_ARRAY <<< "${{ github.event.inputs.images }}"
+          RESULTS="{"
+          
+          for IMAGE in "${IMG_ARRAY[@]}"; do
+            echo "Scanning $IMAGE"
+            
+            trivy image --format json -o result.json "$IMAGE"
+            
+            CRITICAL=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' result.json)
+            HIGH=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length' result.json)
+            UNKNOWN=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="UNKNOWN")] | length' result.json)
+            TOTAL=$(jq '[.Results[].Vulnerabilities[]?] | length' result.json)
+
+            RESULTS="$RESULTS\"$IMAGE\":{\"critical\":$CRITICAL,\"high\":$HIGH,\"unknown\":$UNKNOWN,\"total\":$TOTAL},"
+          done
+
+          RESULTS="${RESULTS%,}}"
+          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+
+      - name: Callback to Azure Function
+        run: |
+          curl -X POST ${{ github.event.inputs.callback_url }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "requestId": "${{ github.event.inputs.requestId }}",
+              "mode": "${{ github.event.inputs.mode }}",
+              "results": ${{ steps.scan.outputs.results }}
+            }'

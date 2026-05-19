@@ -3,14 +3,14 @@ name: Copilot Trivy Scan
 on:
   workflow_dispatch:
     inputs:
-      requestId:
-        required: true
+      # requestId:
+      #   required: true
       images:
         required: true   # comma-separated images
-      mode:
-        required: true   # baseline / candidate
-      callback_url:
-        required: true
+      # mode:
+      #   required: true   # baseline / candidate
+      # callback_url:
+      #   required: true
 
 jobs:
   scan:
@@ -46,12 +46,12 @@ jobs:
           RESULTS="${RESULTS%,}}"
           echo "results=$RESULTS" >> $GITHUB_OUTPUT
 
-      - name: Callback to Azure Function
-        run: |
-          curl -X POST ${{ github.event.inputs.callback_url }} \
-            -H "Content-Type: application/json" \
-            -d '{
-              "requestId": "${{ github.event.inputs.requestId }}",
-              "mode": "${{ github.event.inputs.mode }}",
-              "results": ${{ steps.scan.outputs.results }}
-            }'
+      # - name: Callback to Azure Function
+      #   run: |
+      #     curl -X POST ${{ github.event.inputs.callback_url }} \
+      #       -H "Content-Type: application/json" \
+      #       -d '{
+      #         "requestId": "${{ github.event.inputs.requestId }}",
+      #         "mode": "${{ github.event.inputs.mode }}",
+      #         "results": ${{ steps.scan.outputs.results }}
+      #       }'
